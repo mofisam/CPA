@@ -175,7 +175,7 @@ $sources = $db->fetchAll(
     "SELECT source, COUNT(*) as count FROM subscribers GROUP BY source ORDER BY count DESC"
 );
 
-$pageTitle = "Newsletter Subscribers";
+$pageTitle = "Subscribers";
 ?>
 <?php include '../../admin/includes/admin_header.php'; ?>
 <?php include '../../admin/includes/admin_sidebar.php'; ?>

@@ -22,7 +22,7 @@ class Environment {
             
             // Site
             'SITE_NAME' => 'Clinical Physiology Academy',
-            'SITE_URL' => 'http://localhost/cpa/',
+            'SITE_URL' => 'http://localhost/web/Clinical%20Physiology%20Academy/',
             'ADMIN_EMAIL' => 'admin@clinicalphysiologyacademy.com',
             
             // Security
