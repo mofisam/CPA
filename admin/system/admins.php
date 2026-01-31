@@ -176,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Get all admins
 $admins = $db->fetchAll("SELECT * FROM admins ORDER BY created_at DESC");
 
-$pageTitle = "Admin Users Management";
+$pageTitle = "Users Management";
 ?>
 <?php include '../../admin/includes/admin_header.php'; ?>
 <?php include '../../admin/includes/admin_sidebar.php'; ?>

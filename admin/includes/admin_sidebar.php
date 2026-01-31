@@ -88,13 +88,14 @@
                                 <span>Admin Users</span>
                             </a>
                         </li>
-                        
+                        <!--
                         <li class="nav-item px-3">
                             <a class="nav-link text-white rounded-3 py-3 d-flex align-items-center <?php echo $currentPage == 'settings.php' ? 'active bg-primary shadow-sm' : ''; ?>" href="<?php echo SITE_URL; ?>/admin/system/settings.php">
                                 <i class="fas fa-sliders-h me-3"></i>
                                 <span>Site Settings</span>
                             </a>
                         </li>
+                        -->
                         
                         <li class="nav-item px-3">
                             <a class="nav-link text-white rounded-3 px-3 d-flex align-items-center <?php echo $currentPage == 'profile.php' ? 'active bg-primary shadow-sm' : ''; ?>" href="<?php echo SITE_URL; ?>/admin/profile.php">
