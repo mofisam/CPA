@@ -42,12 +42,12 @@ $pageDescription = "Professional training in echocardiography, ECG interpretatio
                     <a href="#courses" class="btn btn-primary btn-lg px-4">
                         <i class="fas fa-graduation-cap me-2"></i> View Courses
                     </a>
-                    <a href="register-interest.php" class="btn btn-outline-primary btn-lg px-4">
+                    <a href="register-interest.php" class="btn btn-outline-primary btn-lg px-4 text-white">
                         <i class="fas fa-user-plus me-2"></i> Register Interest
                     </a>
                 </div>
                 <div class="mt-4">
-                    <div class="d-flex align-items-center text-muted">
+                    <div class="d-flex align-items-center text-white">
                         <i class="fas fa-shield-alt text-primary me-2"></i>
                         <small>Certified training • Expert instructors • Practical focus</small>
                     </div>
