@@ -3,6 +3,7 @@
  * Authentication Functions
  * Handles admin authentication and authorization
  */
+
 namespace includes\core;
 class Auth {
     
@@ -31,7 +32,8 @@ class Auth {
     public static function requireAdmin() {
         if (!self::checkAdmin()) {
             // Use relative path for redirection
-            header('Location: ../admin/login.php');
+            $baseUrl = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+            header('Location: ' . $baseUrl . '/admin/login.php');
             exit();
         }
     }
