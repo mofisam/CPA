@@ -335,14 +335,13 @@ $pageDescription = "Professional training in echocardiography, ECG interpretatio
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
-                                <h6 class="mb-0">Dr. Adeola Johnson</h6>
-                                <small class="text-muted">Cardiac Physiologist, Lagos</small>
+                                <h6 class="mb-0">Candidate of pervious tranning</h6>
+                                <small class="text-muted">Nigeria</small>
                             </div>
                         </div>
                         <p class="card-text">
-                            "The echocardiography training was exceptional. The practical focus and 
-                            expert guidance from UK-registered physiologists made all the difference 
-                            in my clinical practice."
+                            "This is me saying a very big thank you to all the amazing tutors in this academy. Sincerely, i appreciate the training and all your efforts. I don't even know how to put how grateful i am into writing but i just want you to know
+                            that the seeds you all have sown into our lives during this training will definitely bear lasting fruits. My prayer is that God will continue to bless and strengthen you all and take this academy to a greater heights, Amen"
                         </p>
                         <div class="text-warning">
                             <i class="fas fa-star"></i>
@@ -366,13 +365,15 @@ $pageDescription = "Professional training in echocardiography, ECG interpretatio
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
-                                <h6 class="mb-0">Nurse Funke Adebayo</h6>
-                                <small class="text-muted">ICU Nurse, Abuja</small>
+                                <h6 class="mb-0">Candidate of pervious tranning</h6>
+                                <small class="text-muted">Nigeria</small>
                             </div>
                         </div>
                         <p class="card-text">
-                            "The ECG Masterclass helped me systematically analyze ECGs with confidence. 
-                            The online format was convenient and the support was outstanding."
+                            "I am so happy that i joined this training, the lectures were indept and you will endured to your best ability and even beyond that no one was left behind, this is so rare.
+                            I have an additional skill now, ican carr out the ECG test and interpret it - This is a continuous and never ending progress for me (us).
+                            Thank you sir @samson
+                            Tnank you Clinical Physiology Academy"
                         </p>
                         <div class="text-warning">
                             <i class="fas fa-star"></i>
@@ -396,8 +397,8 @@ $pageDescription = "Professional training in echocardiography, ECG interpretatio
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
-                                <h6 class="mb-0">Chinedu Okoro</h6>
-                                <small class="text-muted">Medical Student, Ibadan</small>
+                                <h6 class="mb-0">Candidate of pervious tranning</h6>
+                                <small class="text-muted">Nigeria</small>
                             </div>
                         </div>
                         <p class="card-text">
