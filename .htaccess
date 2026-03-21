@@ -28,7 +28,8 @@ RewriteEngine On
 # =========================
 # Force HTTPS (ENABLE after SSL works)
 # =========================
-
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # =========================
 # Remove .php extension
