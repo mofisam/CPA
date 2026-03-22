@@ -43,8 +43,15 @@ $currentPageTitle = $pageTitles[$currentPage] ?? 'Admin Panel';
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) : $currentPageTitle; ?> - CPA Admin</title>
+
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     
-    <!-- Bootstrap 5 CSS -->
+    <meta name="apple-mobile-web-app-title" content="Clinical Physiology Academy" />
+    <link rel="manifest" href="/site.webmanifest" />
+        <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- Bootstrap Icons -->
