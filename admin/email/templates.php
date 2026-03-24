@@ -6,6 +6,7 @@ require_once '../../includes/core/Auth.php';
 require_once '../../includes/core/EmailTemplate.php';
 
 use includes\core\Auth;
+use includes\core\Database;
 
 // Check admin authentication
 Auth::requireAdmin();
