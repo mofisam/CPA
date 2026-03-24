@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/Database.php';
+require_once __DIR__ . 'Auth.php';
 
+use includes\core\Auth;
+use includes\core\Database;
 class EmailTemplate {
     private $db;
     
