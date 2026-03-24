@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/config/smtp.php';
+require_once __DIR__ . '/../../config/smtp.php';
 
 class Mailer {
     private $smtp_host;
