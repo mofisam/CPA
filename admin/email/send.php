@@ -19,6 +19,14 @@ $emailTemplate = new EmailTemplate();
 $templates = $emailTemplate->getAllTemplates();
 $courses = $db->fetchAll("SELECT id, title FROM trainings WHERE status IN ('active', 'upcoming')");
 
+// Get all subscribers for individual selection
+$allSubscribers = $db->fetchAll("SELECT id, email, full_name, is_active FROM subscribers ORDER BY full_name, email");
+$allInterests = $db->fetchAll("SELECT ci.id, ci.email, ci.full_name, ci.profession, t.title as course_title 
+                               FROM course_interests ci 
+                               LEFT JOIN trainings t ON ci.training_id = t.id 
+                               WHERE ci.status NOT IN ('not_interested')
+                               ORDER BY ci.full_name, ci.email");
+
 // Handle AJAX preview request
 if (isset($_POST['preview_email']) && $_POST['preview_email'] == '1') {
     header('Content-Type: application/json');
@@ -47,18 +55,52 @@ if (isset($_POST['preview_email']) && $_POST['preview_email'] == '1') {
     exit();
 }
 
-// Handle AJAX recipient count
+// Handle AJAX recipient count and selection
 if (isset($_POST['get_recipient_count'])) {
     header('Content-Type: application/json');
     
     $recipientsType = $_POST['recipients_type'];
     $filter = null;
+    $recipients = [];
     
-    if ($recipientsType == 'specific_course' && isset($_POST['course_id'])) {
-        $filter = ['course_id' => intval($_POST['course_id'])];
+    switch ($recipientsType) {
+        case 'individual':
+            // Handle individual selection from POST data
+            if (isset($_POST['selected_individuals']) && !empty($_POST['selected_individuals'])) {
+                $selectedIds = json_decode($_POST['selected_individuals'], true);
+                $source = $_POST['individual_source'] ?? 'subscribers';
+                
+                if ($source === 'subscribers' && !empty($selectedIds)) {
+                    $placeholders = implode(',', array_fill(0, count($selectedIds), '?'));
+                    $recipients = $db->fetchAll(
+                        "SELECT email, full_name, unsubscribe_token FROM subscribers WHERE id IN ($placeholders) AND is_active = 1",
+                        $selectedIds
+                    );
+                } elseif ($source === 'interests' && !empty($selectedIds)) {
+                    $placeholders = implode(',', array_fill(0, count($selectedIds), '?'));
+                    $recipients = $db->fetchAll(
+                        "SELECT email, full_name, unsubscribe_token FROM course_interests WHERE id IN ($placeholders)",
+                        $selectedIds
+                    );
+                }
+            }
+            break;
+            
+        case 'subscribers':
+            $recipients = $emailTemplate->getRecipients('subscribers');
+            break;
+            
+        case 'course_interests':
+            $recipients = $emailTemplate->getRecipients('course_interests');
+            break;
+            
+        case 'specific_course':
+            if (isset($_POST['course_id'])) {
+                $filter = ['course_id' => intval($_POST['course_id'])];
+                $recipients = $emailTemplate->getRecipients('specific_course', $filter);
+            }
+            break;
     }
-    
-    $recipients = $emailTemplate->getRecipients($recipientsType, $filter);
     
     echo json_encode([
         'count' => count($recipients),
@@ -79,19 +121,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_email'])) {
     $customContent = $_POST['custom_content'];
     $courseId = isset($_POST['course_id']) ? intval($_POST['course_id']) : null;
     
+    // Handle individual recipients
+    $selectedIndividuals = [];
+    if ($recipientsType === 'individual') {
+        $individualSource = $_POST['individual_source'] ?? 'subscribers';
+        $selectedIds = $_POST['selected_individuals'] ?? [];
+        
+        if (empty($selectedIds)) {
+            $sendError = 'Please select at least one individual recipient.';
+        } else {
+            if ($individualSource === 'subscribers') {
+                $placeholders = implode(',', array_fill(0, count($selectedIds), '?'));
+                $selectedIndividuals = $db->fetchAll(
+                    "SELECT email, full_name, unsubscribe_token FROM subscribers WHERE id IN ($placeholders) AND is_active = 1",
+                    $selectedIds
+                );
+            } else {
+                $placeholders = implode(',', array_fill(0, count($selectedIds), '?'));
+                $selectedIndividuals = $db->fetchAll(
+                    "SELECT email, full_name, unsubscribe_token FROM course_interests WHERE id IN ($placeholders)",
+                    $selectedIds
+                );
+            }
+        }
+    }
+    
     // Get template if selected
     $template = null;
     if ($templateId > 0) {
         $template = $emailTemplate->getTemplate($templateId);
     }
     
-    // Get recipients
-    $filter = null;
-    if ($recipientsType == 'specific_course' && $courseId) {
-        $filter = ['course_id' => $courseId];
+    // Get recipients based on type
+    $recipients = [];
+    if ($recipientsType === 'individual') {
+        $recipients = $selectedIndividuals;
+    } else {
+        $filter = null;
+        if ($recipientsType == 'specific_course' && $courseId) {
+            $filter = ['course_id' => $courseId];
+        }
+        $recipients = $emailTemplate->getRecipients($recipientsType, $filter);
     }
-    
-    $recipients = $emailTemplate->getRecipients($recipientsType, $filter);
     
     if (empty($recipients)) {
         $sendError = 'No recipients found for the selected criteria.';
@@ -101,7 +172,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_email'])) {
             'template_id' => $templateId ?: null,
             'campaign_name' => 'Email Campaign - ' . date('Y-m-d H:i:s'),
             'recipients_type' => $recipientsType,
-            'recipients_filter' => json_encode(['course_id' => $courseId])
+            'recipients_filter' => json_encode([
+                'course_id' => $courseId,
+                'individuals' => $recipientsType === 'individual' ? array_column($recipients, 'email') : null
+            ])
         ];
         $campaignId = $emailTemplate->createCampaign($campaignData);
         
@@ -126,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_email'])) {
                     $processed = $emailTemplate->processTemplate($template, [
                         'recipient_name' => $recipient['full_name'] ?: 'Valued Professional',
                         'recipient_email' => $recipient['email'],
-                        'unsubscribe_token' => $recipient['unsubscribe_token'],
+                        'unsubscribe_token' => $recipient['unsubscribe_token'] ?? $emailTemplate->generateUnsubscribeToken($recipient['email']),
                         'dynamic_content' => $customContent ?: ''
                     ]);
                     $subject = $processed['subject'];
@@ -135,7 +209,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_email'])) {
                     $subject = $customSubject;
                     $content = $customContent;
                     // Add unsubscribe link to custom content
-                    $unsubscribeLink = SITE_URL . 'unsubscribe.php?token=' . $recipient['unsubscribe_token'];
+                    $unsubscribeToken = $recipient['unsubscribe_token'] ?? $emailTemplate->generateUnsubscribeToken($recipient['email']);
+                    $unsubscribeLink = SITE_URL . 'unsubscribe.php?token=' . $unsubscribeToken;
                     $content .= "\n\n<hr>\n<p style='font-size:12px; color:#666;'>";
                     $content .= "If you no longer wish to receive these emails, you can ";
                     $content .= "<a href='{$unsubscribeLink}'>unsubscribe here</a>.";
@@ -235,6 +310,47 @@ $pageTitle = "Send Email Campaign";
     font-size: 0.875rem;
 }
 
+.individual-selector {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+}
+
+.individual-item {
+    padding: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.individual-item:hover {
+    background-color: #f8f9fa;
+}
+
+.individual-item.selected {
+    background-color: #e7f1ff;
+    border-left: 3px solid #0d6efd;
+}
+
+.individual-item .name {
+    font-weight: 500;
+}
+
+.individual-item .email {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.search-box {
+    position: sticky;
+    top: 0;
+    background: white;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
 </style>
 
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -271,6 +387,7 @@ $pageTitle = "Send Email Campaign";
                                         <div class="col-md-6 mb-3">
                                             <select class="form-select" id="recipients_type" name="recipients_type" required>
                                                 <option value="">Select recipient group...</option>
+                                                <option value="individual">Specific Individuals</option>
                                                 <option value="subscribers">All Newsletter Subscribers</option>
                                                 <option value="course_interests">All Course Interest Registrants</option>
                                                 <option value="specific_course">Specific Course Interest</option>
@@ -287,6 +404,55 @@ $pageTitle = "Send Email Campaign";
                                             </select>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Individual Selection Panel -->
+                                    <div id="individual_panel" style="display: none;">
+                                        <div class="card mt-2">
+                                            <div class="card-header">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <strong><i class="fas fa-user-check me-2"></i> Select Individuals</strong>
+                                                    <div>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllIndividuals">
+                                                            <i class="fas fa-check-double me-1"></i> Select All
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearAllIndividuals">
+                                                            <i class="fas fa-times me-1"></i> Clear All
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <div class="btn-group" role="group">
+                                                        <input type="radio" class="btn-check" name="individual_source" id="source_subscribers" value="subscribers" checked>
+                                                        <label class="btn btn-outline-primary" for="source_subscribers">Newsletter Subscribers</label>
+                                                        
+                                                        <input type="radio" class="btn-check" name="individual_source" id="source_interests" value="interests">
+                                                        <label class="btn btn-outline-primary" for="source_interests">Course Interests</label>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="search-box">
+                                                    <input type="text" class="form-control" id="individualSearch" placeholder="Search by name or email...">
+                                                </div>
+                                                
+                                                <div id="individual_list" class="individual-selector">
+                                                    <!-- Subscribers list will be loaded here -->
+                                                    <div class="text-center py-3 text-muted">
+                                                        <i class="fas fa-spinner fa-spin me-2"></i> Loading...
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="mt-3">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-info-circle me-1"></i>
+                                                        Selected: <span id="selected_count">0</span> individuals
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div id="recipient_info" class="alert alert-info mt-2" style="display: none;">
                                         <i class="fas fa-users me-2"></i>
                                         <span id="recipient_count">0</span> recipients found
@@ -380,9 +546,14 @@ $pageTitle = "Send Email Campaign";
             </div>
 
 <script>
+let allSubscribers = <?php echo json_encode($allSubscribers); ?>;
+let allInterests = <?php echo json_encode($allInterests); ?>;
+let selectedIndividuals = [];
+
 document.addEventListener('DOMContentLoaded', function() {
     const recipientsType = document.getElementById('recipients_type');
     const courseSelectContainer = document.getElementById('course_select_container');
+    const individualPanel = document.getElementById('individual_panel');
     const courseId = document.getElementById('course_id');
     const recipientInfo = document.getElementById('recipient_info');
     const recipientCount = document.getElementById('recipient_count');
@@ -393,13 +564,129 @@ document.addEventListener('DOMContentLoaded', function() {
     const subjectInput = document.getElementById('subject');
     const contentTextarea = document.getElementById('content');
     const previewBtn = document.getElementById('previewBtn');
-    const sendBtn = document.getElementById('sendBtn');
     const emailForm = document.getElementById('emailForm');
+    const individualSearch = document.getElementById('individualSearch');
+    const selectAllBtn = document.getElementById('selectAllIndividuals');
+    const clearAllBtn = document.getElementById('clearAllIndividuals');
+    const selectedCountSpan = document.getElementById('selected_count');
+    const sourceSubscribers = document.getElementById('source_subscribers');
+    const sourceInterests = document.getElementById('source_interests');
     
-    // Update recipient count when selection changes
+    let currentIndividualList = [];
+    
+    // Load individual list based on source
+    function loadIndividualList() {
+        const source = document.querySelector('input[name="individual_source"]:checked').value;
+        let data = [];
+        
+        if (source === 'subscribers') {
+            data = allSubscribers.filter(s => s.is_active == 1);
+        } else {
+            data = allInterests;
+        }
+        
+        currentIndividualList = data;
+        renderIndividualList();
+    }
+    
+    // Render individual list with search filter
+    function renderIndividualList() {
+        const searchTerm = individualSearch.value.toLowerCase();
+        const source = document.querySelector('input[name="individual_source"]:checked').value;
+        let filteredList = currentIndividualList;
+        
+        if (searchTerm) {
+            filteredList = currentIndividualList.filter(item => 
+                (item.full_name && item.full_name.toLowerCase().includes(searchTerm)) ||
+                item.email.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        const container = document.getElementById('individual_list');
+        
+        if (filteredList.length === 0) {
+            container.innerHTML = '<div class="text-center py-3 text-muted">No individuals found</div>';
+            return;
+        }
+        
+        container.innerHTML = filteredList.map(item => {
+            const isSelected = selectedIndividuals.some(selected => selected.id === item.id && selected.source === source);
+            return `
+                <div class="individual-item ${isSelected ? 'selected' : ''}" 
+                     data-id="${item.id}" 
+                     data-email="${item.email}" 
+                     data-name="${item.full_name || ''}"
+                     data-source="${source}">
+                    <div class="name">${escapeHtml(item.full_name || 'No Name')}</div>
+                    <div class="email">${escapeHtml(item.email)}</div>
+                    ${item.course_title ? `<div class="small text-muted">Course: ${escapeHtml(item.course_title)}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+        
+        // Add click handlers
+        document.querySelectorAll('.individual-item').forEach(el => {
+            el.addEventListener('click', function(e) {
+                const id = parseInt(this.dataset.id);
+                const email = this.dataset.email;
+                const name = this.dataset.name;
+                const source = this.dataset.source;
+                
+                const index = selectedIndividuals.findIndex(item => item.id === id && item.source === source);
+                if (index === -1) {
+                    selectedIndividuals.push({ id, email, name, source });
+                    this.classList.add('selected');
+                } else {
+                    selectedIndividuals.splice(index, 1);
+                    this.classList.remove('selected');
+                }
+                updateSelectedCount();
+                updateRecipientCount();
+            });
+        });
+    }
+    
+    // Update selected count display
+    function updateSelectedCount() {
+        selectedCountSpan.textContent = selectedIndividuals.length;
+        if (selectedIndividuals.length > 0) {
+            document.getElementById('recipient_info').style.display = 'block';
+            document.getElementById('recipient_count').textContent = selectedIndividuals.length;
+        } else {
+            document.getElementById('recipient_info').style.display = 'none';
+        }
+    }
+    
+    // Escape HTML
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Update recipient count based on selection
     function updateRecipientCount() {
         const type = recipientsType.value;
-        const course = courseId.value;
+        
+        if (type === 'individual') {
+            if (selectedIndividuals.length > 0) {
+                recipientCount.textContent = selectedIndividuals.length;
+                recipientInfo.style.display = 'block';
+                
+                // Show preview of selected individuals
+                const previewList = selectedIndividuals.slice(0, 5);
+                recipientList.innerHTML = previewList.map(r => 
+                    `<li>${escapeHtml(r.email)}${r.name ? ' (' + escapeHtml(r.name) + ')' : ''}</li>`
+                ).join('');
+                if (selectedIndividuals.length > 5) {
+                    recipientList.innerHTML += `<li>... and ${selectedIndividuals.length - 5} more</li>`;
+                }
+            } else {
+                recipientInfo.style.display = 'none';
+            }
+            return;
+        }
         
         if (!type) {
             recipientInfo.style.display = 'none';
@@ -409,8 +696,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         formData.append('get_recipient_count', '1');
         formData.append('recipients_type', type);
-        if (type === 'specific_course' && course) {
-            formData.append('course_id', course);
+        if (type === 'specific_course' && courseId.value) {
+            formData.append('course_id', courseId.value);
         }
         
         fetch(window.location.href, {
@@ -422,7 +709,6 @@ document.addEventListener('DOMContentLoaded', function() {
             recipientCount.textContent = data.count;
             recipientInfo.style.display = 'block';
             
-            // Populate recipient list for preview
             if (data.recipients && data.recipients.length > 0) {
                 recipientList.innerHTML = '';
                 data.recipients.forEach(recipient => {
@@ -430,17 +716,71 @@ document.addEventListener('DOMContentLoaded', function() {
                     li.textContent = recipient.email + (recipient.full_name ? ' (' + recipient.full_name + ')' : '');
                     recipientList.appendChild(li);
                 });
+                if (data.count > data.recipients.length) {
+                    const li = document.createElement('li');
+                    li.textContent = `... and ${data.count - data.recipients.length} more`;
+                    recipientList.appendChild(li);
+                }
             }
         });
     }
     
-    // Show/hide course select based on recipient type
+    // Show/hide panels based on recipient type
     recipientsType.addEventListener('change', function() {
         if (this.value === 'specific_course') {
             courseSelectContainer.style.display = 'block';
+            individualPanel.style.display = 'none';
+            recipientInfo.style.display = 'none';
+        } else if (this.value === 'individual') {
+            courseSelectContainer.style.display = 'none';
+            individualPanel.style.display = 'block';
+            loadIndividualList();
+            updateSelectedCount();
         } else {
             courseSelectContainer.style.display = 'none';
+            individualPanel.style.display = 'none';
+            updateRecipientCount();
         }
+    });
+    
+    // Source change handlers
+    sourceSubscribers.addEventListener('change', loadIndividualList);
+    sourceInterests.addEventListener('change', loadIndividualList);
+    
+    // Search handler
+    individualSearch.addEventListener('input', renderIndividualList);
+    
+    // Select all
+    selectAllBtn.addEventListener('click', function() {
+        const source = document.querySelector('input[name="individual_source"]:checked').value;
+        const items = document.querySelectorAll('.individual-item');
+        
+        items.forEach(item => {
+            const id = parseInt(item.dataset.id);
+            const email = item.dataset.email;
+            const name = item.dataset.name;
+            const itemSource = item.dataset.source;
+            
+            if (itemSource === source) {
+                const exists = selectedIndividuals.some(i => i.id === id && i.source === source);
+                if (!exists) {
+                    selectedIndividuals.push({ id, email, name, source: itemSource });
+                    item.classList.add('selected');
+                }
+            }
+        });
+        updateSelectedCount();
+        updateRecipientCount();
+    });
+    
+    // Clear all
+    clearAllBtn.addEventListener('click', function() {
+        const source = document.querySelector('input[name="individual_source"]:checked').value;
+        selectedIndividuals = selectedIndividuals.filter(i => i.source !== source);
+        document.querySelectorAll('.individual-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        updateSelectedCount();
         updateRecipientCount();
     });
     
@@ -505,10 +845,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Manual preview button
     previewBtn.addEventListener('click', updatePreview);
-    
-    // Auto-update on input changes
     subjectInput.addEventListener('input', updatePreview);
     contentTextarea.addEventListener('input', updatePreview);
     
@@ -538,6 +875,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
+        if (type === 'individual' && selectedIndividuals.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one individual recipient.');
+            return false;
+        }
+        
         if (type === 'specific_course' && !courseId.value) {
             e.preventDefault();
             alert('Please select a course.');
@@ -556,7 +899,26 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
+        // Add selected individuals to form data
+        if (type === 'individual') {
+            const selectedIds = selectedIndividuals.map(i => i.id);
+            const selectedSource = document.querySelector('input[name="individual_source"]:checked').value;
+            
+            const hiddenIds = document.createElement('input');
+            hiddenIds.type = 'hidden';
+            hiddenIds.name = 'selected_individuals';
+            hiddenIds.value = JSON.stringify(selectedIds);
+            emailForm.appendChild(hiddenIds);
+            
+            const hiddenSource = document.createElement('input');
+            hiddenSource.type = 'hidden';
+            hiddenSource.name = 'individual_source';
+            hiddenSource.value = selectedSource;
+            emailForm.appendChild(hiddenSource);
+        }
+        
         const confirmMsg = 'Are you sure you want to send this email to the selected recipients?\n\n' +
+                          'Total recipients: ' + (type === 'individual' ? selectedIndividuals.length : recipientCount.textContent) + '\n\n' +
                           'This action cannot be undone and emails will be sent immediately.';
         if (!confirm(confirmMsg)) {
             e.preventDefault();
