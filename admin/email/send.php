@@ -121,24 +121,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_email'])) {
     $customContent = $_POST['custom_content'];
     $courseId = isset($_POST['course_id']) ? intval($_POST['course_id']) : null;
     
-    // Handle individual recipients
+    // Handle individual recipients selection
     $selectedIndividuals = [];
+
     if ($recipientsType === 'individual') {
         $individualSource = $_POST['individual_source'] ?? 'subscribers';
         $selectedIds = $_POST['selected_individuals'] ?? [];
-        
+
+        // ✅ Ensure $selectedIds is always an array
+        if (!is_array($selectedIds)) {
+            $selectedIds = explode(',', $selectedIds);
+        }
+
+        // ✅ Clean the values
+        $selectedIds = array_filter(array_map('trim', $selectedIds));
+
         if (empty($selectedIds)) {
             $sendError = 'Please select at least one individual recipient.';
         } else {
-            // Ensure it's always an array
-            if (!is_array($selectedIds)) {
-                $selectedIds = explode(',', $selectedIds);
-            }
-
-            $selectedIds = array_filter(array_map('trim', $selectedIds));
+            // ✅ Generate placeholders safely
+            $placeholders = implode(',', array_fill(0, count($selectedIds), '?'));
 
             if ($individualSource === 'subscribers') {
-                $placeholders = implode(',', array_fill(0, count($selectedIds), '?'));
                 $selectedIndividuals = $db->fetchAll(
                     "SELECT email, full_name, unsubscribe_token 
                     FROM subscribers 
@@ -146,14 +150,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_email'])) {
                     $selectedIds
                 );
             } else {
-                $placeholders = implode(',', array_fill(0, count($selectedIds), '?'));
                 $selectedIndividuals = $db->fetchAll(
                     "SELECT email, full_name, unsubscribe_token 
                     FROM course_interests 
                     WHERE id IN ($placeholders)",
                     $selectedIds
                 );
-            }
             }
         }
     }
