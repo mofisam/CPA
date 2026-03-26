@@ -130,18 +130,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_email'])) {
         if (empty($selectedIds)) {
             $sendError = 'Please select at least one individual recipient.';
         } else {
+            // Ensure it's always an array
+            if (!is_array($selectedIds)) {
+                $selectedIds = explode(',', $selectedIds);
+            }
+
+            $selectedIds = array_filter(array_map('trim', $selectedIds));
+
             if ($individualSource === 'subscribers') {
                 $placeholders = implode(',', array_fill(0, count($selectedIds), '?'));
                 $selectedIndividuals = $db->fetchAll(
-                    "SELECT email, full_name, unsubscribe_token FROM subscribers WHERE id IN ($placeholders) AND is_active = 1",
+                    "SELECT email, full_name, unsubscribe_token 
+                    FROM subscribers 
+                    WHERE id IN ($placeholders) AND is_active = 1",
                     $selectedIds
                 );
             } else {
                 $placeholders = implode(',', array_fill(0, count($selectedIds), '?'));
                 $selectedIndividuals = $db->fetchAll(
-                    "SELECT email, full_name, unsubscribe_token FROM course_interests WHERE id IN ($placeholders)",
+                    "SELECT email, full_name, unsubscribe_token 
+                    FROM course_interests 
+                    WHERE id IN ($placeholders)",
                     $selectedIds
                 );
+            }
             }
         }
     }
