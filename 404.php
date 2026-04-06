@@ -180,7 +180,6 @@ http_response_code(404);
                     </div>
                     <div class="col-md-4">
                         <ul class="list-unstyled">
-                            <li><a href="admin/login.php"><i class="fas fa-user-shield me-2"></i> Admin Login</a></li>
                             <li><a href="privacy.php"><i class="fas fa-lock me-2"></i> Privacy Policy</a></li>
                             <li><a href="terms.php"><i class="fas fa-file-contract me-2"></i> Terms of Service</a></li>
                         </ul>

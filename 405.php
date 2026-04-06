@@ -2,8 +2,8 @@
 require_once 'config/environment.php';
 require_once 'includes/core/Functions.php';
 
-$pageTitle = "405 - Method Not Allowed | " . SITE_NAME;
-$pageDescription = "The requested method is not supported for this resource.";
+$pageTitle = "405 - Request Not Supported | " . SITE_NAME;
+$pageDescription = "The requested action is not supported. Please try a different approach.";
 http_response_code(405);
 ?>
 <?php include 'includes/header.php'; ?>
@@ -19,99 +19,47 @@ http_response_code(405);
 
 .error-content {
     text-align: center;
-    max-width: 600px;
+    max-width: 500px;
     margin: 0 auto;
 }
 
 .error-icon {
-    font-size: 6rem;
+    font-size: 5rem;
     color: #fd7e14;
     margin-bottom: 1.5rem;
 }
 
 .error-icon i {
-    animation: shake 0.5s ease-in-out;
+    animation: gentleShake 0.5s ease-in-out;
 }
 
-@keyframes shake {
-    0%, 100% {
-        transform: translateX(0);
-    }
-    25% {
-        transform: translateX(-10px);
-    }
-    75% {
-        transform: translateX(10px);
-    }
+@keyframes gentleShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 
 .error-code {
-    font-size: 6rem;
+    font-size: 5rem;
     font-weight: 700;
     color: #fd7e14;
     line-height: 1;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     font-family: monospace;
 }
 
 .error-title {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 600;
     margin-bottom: 1rem;
     color: #2c3e50;
 }
 
 .error-message {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: #6c757d;
     margin-bottom: 2rem;
-}
-
-.method-info {
-    background-color: #fff3cd;
-    border: 1px solid #ffc107;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    margin-bottom: 2rem;
-    text-align: left;
-}
-
-.method-info h5 {
-    color: #856404;
-    margin-bottom: 0.75rem;
-}
-
-.method-info code {
-    background-color: #fff;
-    padding: 0.2rem 0.4rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-}
-
-.allowed-methods {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin: 1rem 0;
-}
-
-.allowed-method {
-    background-color: #28a745;
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 2rem;
-    font-size: 0.875rem;
-    font-family: monospace;
-}
-
-.current-method {
-    background-color: #dc3545;
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 2rem;
-    font-size: 0.875rem;
-    font-family: monospace;
+    line-height: 1.6;
 }
 
 .action-buttons {
@@ -127,12 +75,12 @@ http_response_code(405);
     padding: 1.5rem;
     border-radius: 0.5rem;
     text-align: left;
-    margin-top: 2rem;
+    margin-top: 1rem;
 }
 
 .suggestions h4 {
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
     color: #2c3e50;
 }
 
@@ -144,6 +92,13 @@ http_response_code(405);
 .suggestions li {
     margin-bottom: 0.5rem;
     color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.suggestions li i {
+    color: #fd7e14;
+    margin-right: 0.5rem;
+    width: 1.25rem;
 }
 </style>
 
@@ -151,57 +106,39 @@ http_response_code(405);
     <div class="container">
         <div class="error-content">
             <div class="error-icon">
-                <i class="fas fa-ban"></i>
+                <i class="fas fa-hand-paper"></i>
             </div>
             <div class="error-code">405</div>
-            <h1 class="error-title">Method Not Allowed</h1>
+            <h1 class="error-title">Oops! That Didn't Work</h1>
             <p class="error-message">
-                The HTTP method used to access this page is not supported.
+                The way you tried to access this page isn't supported. 
+                Don't worry though - there's usually a simpler way to do what you're trying to accomplish.
             </p>
-            
-            <?php
-            // Get request method if available
-            $request_method = $_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN';
-            ?>
-            
-            <div class="method-info">
-                <h5><i class="fas fa-info-circle me-2"></i> Technical Details:</h5>
-                <p class="mb-2">The request was made using <strong><code><?php echo htmlspecialchars($request_method); ?></code></strong> method, which is not allowed for this resource.</p>
-                <p class="mb-0">This page expects one of the following HTTP methods:</p>
-                <div class="allowed-methods">
-                    <span class="allowed-method">GET</span>
-                    <span class="allowed-method">POST</span>
-                </div>
-                <p class="text-muted small mt-2 mb-0">Your request used: <span class="current-method"><?php echo htmlspecialchars($request_method); ?></span></p>
-            </div>
             
             <div class="action-buttons">
                 <a href="javascript:history.back()" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i> Go Back
                 </a>
                 <a href="index.php" class="btn btn-primary">
-                    <i class="fas fa-home me-2"></i> Return Home
-                </a>
-                <a href="contact.php" class="btn btn-outline-primary">
-                    <i class="fas fa-envelope me-2"></i> Report Issue
+                    <i class="fas fa-home me-2"></i> Home Page
                 </a>
             </div>
             
             <div class="suggestions">
-                <h4><i class="fas fa-lightbulb me-2"></i> What Could Have Happened:</h4>
+                <h4><i class="fas fa-lightbulb me-2"></i> Here's What You Can Try:</h4>
                 <ul>
-                    <li>You may have submitted a form incorrectly</li>
-                    <li>A bookmark or link might be outdated</li>
-                    <li>You might have tried to directly access an API endpoint</li>
-                    <li>A plugin or extension may be causing conflicts</li>
+                    <li><i class="fas fa-arrow-left"></i> Use the back button and try again</li>
+                    <li><i class="fas fa-home"></i> Start fresh from our <a href="index.php">homepage</a></li>
+                    <li><i class="fas fa-search"></i> Use the search to find what you need</li>
+                    <li><i class="fas fa-envelope"></i> <a href="contact.php">Contact us</a> if you need help</li>
                 </ul>
             </div>
             
             <div class="mt-4">
                 <hr>
                 <p class="text-muted small">
-                    If you believe this is an error, please <a href="contact.php">contact our support team</a> 
-                    and include the method you were trying to use.
+                    Need immediate assistance? Our support team is here to help.
+                    <a href="contact.php">Get in touch</a>
                 </p>
             </div>
         </div>

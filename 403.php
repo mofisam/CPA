@@ -139,10 +139,8 @@ http_response_code(403);
             <div class="suggestions">
                 <h4><i class="fas fa-lightbulb me-2"></i> Possible Reasons:</h4>
                 <ul>
-                    <li>You may need to <a href="admin/login.php">login</a> to access this resource</li>
                     <li>Your account may not have the required permissions</li>
-                    <li>The page might be restricted to certain user roles</li>
-                    <li>You may have attempted to access an admin-only area</li>
+                    <li>The page might be restricted to certain user</li>
                     <li>Your IP address might be blocked</li>
                 </ul>
             </div>
