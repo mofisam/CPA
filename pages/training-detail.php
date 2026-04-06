@@ -259,7 +259,7 @@ $pageDescription = $training['short_description'];
                 <?php if ($training['featured_image']): ?>
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-0">
-                        <img src="../<?php echo htmlspecialchars($training['featured_image']); ?>" 
+                        <img src="../assets/images/trainings/<?php echo htmlspecialchars($training['featured_image']); ?>" 
                              class="img-fluid rounded" 
                              alt="<?php echo htmlspecialchars($training['title']); ?>"
                              style="max-height: 400px; width: 100%; object-fit: cover;">
@@ -365,7 +365,7 @@ $pageDescription = $training['short_description'];
                             <div class="col-md-4 mb-3">
                                 <div class="card h-100 border">
                                     <?php if ($related['featured_image']): ?>
-                                        <img src="../<?php echo htmlspecialchars($related['featured_image']); ?>" 
+                                        <img src="../assets/images/trainings/<?php echo htmlspecialchars($related['featured_image']); ?>" 
                                              class="card-img-top" 
                                              alt="<?php echo htmlspecialchars($related['title']); ?>"
                                              style="height: 120px; object-fit: cover;">
