@@ -8,7 +8,7 @@
                 <div class="col-lg-4 mb-4">
                     <a class="navbar-brand d-flex align-items-center mb-3" href="/">
                         <div class="logo-wrapper me-2">
-                            <img src="assets/images/logo.jpg" alt="Clinical PhysiologyAcademy logo" style="height:40px; width:auto; margin-right:8px; border-radius: 20px">
+                            <img src="<?php echo isset($base_url) ? $base_url : ''; ?>/assets/images/logo.jpg" alt="Clinical PhysiologyAcademy logo" style="height:40px; width:auto; margin-right:8px; border-radius: 20px">
                         </div>
                         <div>
                             <span class="fw-bold fs-4 text-white">Clinical Physiology</span>
