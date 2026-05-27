@@ -43,7 +43,8 @@ RewriteRule ^(.+)$ $1.php [L]
 # =========================
 RewriteCond %{THE_REQUEST} \s/+(.+)\.php[\s?]
 RewriteRule ^ /%1 [R=301,L]
-
+# ===========================
+Options -Indexes
 # =========================
 # Custom error pages (use relative path)
 # =========================
