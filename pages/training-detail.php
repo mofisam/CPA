@@ -262,7 +262,7 @@ $pageDescription = $training['short_description'];
                         <img src="../assets/images/trainings/<?php echo htmlspecialchars($training['featured_image']); ?>" 
                              class="img-fluid rounded" 
                              alt="<?php echo htmlspecialchars($training['title']); ?>"
-                             style="height: 400px; width: 100%; object-fit: cover;">
+                             style="height: 500px; object-fit: cover;">
                     </div>
                 </div>
                 <?php endif; ?>
