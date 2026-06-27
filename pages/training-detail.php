@@ -368,7 +368,7 @@ $pageDescription = $training['short_description'];
                                         <img src="../assets/images/trainings/<?php echo htmlspecialchars($related['featured_image']); ?>" 
                                              class="card-img-top" 
                                              alt="<?php echo htmlspecialchars($related['title']); ?>"
-                                             style="height: 120px; object-fit: cover;">
+                                             style="height: 500px; object-fit: cover;">
                                     <?php else: ?>
                                         <div class="card-img-top bg-primary text-white d-flex align-items-center justify-content-center" 
                                              style="height: 120px;">
