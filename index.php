@@ -166,7 +166,7 @@ $pageDescription = "Professional training in echocardiography, ECG interpretatio
                                 <img src="assets/images/trainings/<?php echo htmlspecialchars($training['featured_image']); ?>" 
                                      class="card-img-top" 
                                      alt="<?php echo htmlspecialchars($training['title']); ?>"
-                                     style="height: 200px; object-fit: cover;">
+                                     style="height: 300px; object-fit: cover;">
                             <?php else: ?>
                                 <div class="card-img-top bg-primary text-white d-flex align-items-center justify-content-center" 
                                      style="height: 200px;">
