@@ -21,8 +21,9 @@
                     <div class="social-icons">
                         <a href="#" class="text-white me-3" aria-label="Facebook"><i class="fab fa-facebook-f fa-lg"></i></a>
                         <a href="#" class="text-white me-3" aria-label="Twitter"><i class="fab fa-twitter fa-lg"></i></a>
-                        <a href="#" class="text-white me-3" aria-label="LinkedIn"><i class="fab fa-linkedin-in fa-lg"></i></a>
-                        <a href="#" class="text-white" aria-label="Instagram"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="https://www.linkedin.com/company/clinical-physiology-academy" class="text-white me-3" aria-label="LinkedIn"><i class="fab fa-linkedin-in fa-lg"></i></a>
+                        <a href="#" class="https://www.instagram.com/p/C_IJ-s_o0V8/" aria-label="Instagram"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="https://wa.me/447827183623" class="text-white" aria-label="Whatsapp"><i class="fab fa-whatsapp fa-lg"></i></a>
                     </div>
                 </div>
                 
